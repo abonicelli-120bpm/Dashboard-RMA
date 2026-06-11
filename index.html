@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard PMO — RMA Arquitectura</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#F26522;--royal:#3B5FBB;--teal:#2E9299;--dark:#111111;
+  --slate:#2D3748;--muted:#718096;--line:#E2E8F0;--bg:#F7F8FC;
+  --white:#FFFFFF;--cream:#FDF9F5;--green:#38A169;--red:#E53E3E;--amber:#D69E2E;
+}
+body{font-family:'Manrope','Segoe UI',sans-serif;background:var(--bg);color:var(--slate);min-height:100vh;display:flex;flex-direction:column;font-size:13px}
+
+/* HEADER */
+header{background:var(--dark);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+header::after{content:'';position:absolute;right:-60px;top:50%;transform:translateY(-50%);width:220px;height:44px;background:var(--orange);border-radius:999px;opacity:.2}
+header::before{content:'';position:absolute;right:100px;top:50%;transform:translateY(-50%);width:140px;height:44px;background:var(--orange);border-radius:999px;opacity:.1}
+.hdr-l{display:flex;align-items:center;gap:16px;z-index:1}
+.hdr-l img{height:52px;width:auto;filter:brightness(0) invert(1)}
+.hdr-div{width:1px;height:32px;background:rgba(255,255,255,.2)}
+.hdr-info strong{font-family:'Manrope',sans-serif;font-size:15px;font-weight:800;color:white}
+.hdr-info span{font-size:11px;color:rgba(255,255,255,.45);display:block;margin-top:1px}
+.hdr-r{display:flex;align-items:center;gap:14px;z-index:1}
+.informe-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:0;padding:5px 12px;font-size:11px;color:rgba(255,255,255,.7);letter-spacing:.04em}
+
+/* NAV */
+nav{background:var(--white);border-bottom:2px solid var(--line);display:flex;padding:0 32px}
+nav button{background:none;border:none;cursor:pointer;padding:12px 18px;font-size:11px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+nav button.active{color:var(--royal);border-bottom-color:var(--orange)}
+
+/* MAIN */
+main{flex:1;padding:24px 32px;width:100%;max-width:1400px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--line);border-radius:0;padding:18px 20px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--royal))}
+.card.accent-teal::before{background:var(--teal)}
+.card.accent-orange::before{background:var(--orange)}
+.card.accent-royal::before{background:var(--royal)}
+.card-title{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:0;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.k-orange::before{background:var(--orange)}
+.kpi.k-royal::before{background:var(--royal)}
+.kpi.k-teal::before{background:var(--teal)}
+.kpi.k-red::before{background:var(--red)}
+.kpi.k-green::before{background:var(--green)}
+.kpi.k-amber::before{background:var(--amber)}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.kpi-val{font-family:'Manrope',sans-serif;font-size:26px;font-weight:800;color:var(--dark);line-height:1}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+
+/* DISTRIBUTION TABLE */
+.dist-table{width:100%;border-collapse:collapse;font-size:12px}
+.dist-table th{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:0 0 8px;text-align:right;border-bottom:1px solid var(--line)}
+.dist-table th:first-child{text-align:left}
+.dist-table td{padding:7px 0;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.dist-table td:first-child{text-align:left;font-weight:600}
+.dist-table tr:last-child td{border-bottom:none;font-weight:700;color:var(--royal)}
+.prog-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+
+/* ALERTS TABLE */
+.proj-table{width:100%;border-collapse:collapse;font-size:12px}
+.proj-table th{background:var(--royal);color:white;padding:9px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.proj-table td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.proj-table tr:nth-child(even) td{background:#FAFBFF}
+.proj-table tr:hover td{background:#EEF2FF}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.badge.alto{background:#FED7D7;color:#C53030}
+.badge.medio{background:#FEFCBF;color:#B7791F}
+.badge.bajo{background:#C6F6D5;color:#276749}
+.badge.na{background:var(--line);color:var(--muted)}
+.badge.activo{background:#C6F6D5;color:#276749}
+.badge.standby{background:#FEFCBF;color:#B7791F}
+.badge.cerrado{background:var(--line);color:var(--muted)}
+.alert-chip{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:#FFF5F5;color:#C53030;border:1px solid #FED7D7}
+
+/* PROGRESS BAR */
+.prog-bar{width:70px;height:5px;background:var(--line);border-radius:999px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px}
+.prog-fill{height:100%;border-radius:999px;background:var(--teal)}
+.prog-fill.hi{background:var(--green)}
+.prog-fill.lo{background:var(--amber)}
+
+/* PROJECT SELECTOR */
+.selector-wrap{position:relative}
+.selector-wrap select{width:100%;padding:10px 36px 10px 12px;border:1.5px solid var(--line);border-radius:0;font-size:13px;color:var(--slate);background:var(--white);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23718096' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;outline:none;font-weight:600;transition:border-color .15s}
+.selector-wrap select:focus{border-color:var(--royal);box-shadow:0 0 0 3px rgba(59,95,187,.1)}
+
+/* PROJECT DETAIL CARD */
+.proj-detail{display:none}
+.proj-detail.visible{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:16px}
+.detail-metric{background:var(--bg);border:1px solid var(--line);border-radius:0;padding:14px 16px}
+.dm-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.dm-val{font-family:'Manrope',sans-serif;font-size:20px;font-weight:800;color:var(--dark);line-height:1}
+.dm-val.pos{color:var(--green)}
+.dm-val.neg{color:var(--red)}
+.dm-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filter-bar label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.filter-bar select{padding:7px 28px 7px 10px;border:1.5px solid var(--line);border-radius:0;font-size:12px;color:var(--slate);background:var(--white);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23718096' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;cursor:pointer;outline:none;transition:border-color .15s}
+.filter-bar select:focus{border-color:var(--royal)}
+.search-w{position:relative;flex:1;max-width:240px}
+.search-w input{width:100%;padding:7px 10px 7px 28px;border:1.5px solid var(--line);border-radius:0;font-size:12px;outline:none}
+.search-w input:focus{border-color:var(--royal)}
+.search-w::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px}
+.filter-count{margin-left:auto;font-size:11px;color:var(--muted);font-weight:600}
+
+/* VAR COLOR */
+.pos{color:var(--green);font-weight:700}
+.neg{color:var(--red);font-weight:700}
+
+/* FOOTER */
+footer{background:var(--dark);padding:0 32px;height:44px;display:flex;align-items:center;justify-content:space-between}
+.bpm-logo{display:flex;align-items:center;gap:8px}
+.bpm-d{display:flex;align-items:center;gap:3px}
+.bd{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.bd.s{width:4px;height:4px;opacity:.6}
+.bpm-t{font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;color:white;letter-spacing:.06em;margin-left:4px}
+.bpm-s{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-left:10px}
+.ftr-r{font-size:10px;color:rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-l">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAD7CAYAAADAdLCjAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAADW0lEQVR4nO3c2XKsIBQFUE3d///lzkPHupYljiAHWesp1U4kOVvAoYcBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA75/Jl+3lo2V7INufc/P87az9H3zbax9AFy/kPHcTzd3q3jX9lfreOs7T9n+0n7qd2AM0r2ApH1+DtH0lRIJtGKplZ7ov0d3qrJkAxDngJpochaaOPbNRuSYVBAPONfrQMfnXTuBeHz+XzuTGBzbH912xzutp994XuS8U/tdtRQO4B8hQ/JpGRQrhajIu5DMyEhTVjLekVIalzpKl2Yqf33OvSsqamQKJA0vUk5TYWktKOFphfpS1MhUTxfvf2+tTUVkiccuS+z9nmEwjXkKqOZkOQugAhFvSZyCHsVPiR7T/6WKJ4WzshC85xqj6VEKMRxHMcz7WjhLO8xlfzC9yRbIt6FL3FMRV9XsyHJVTh3H7SsWcCpY0fopd+k2nDrqreeVSOGkK+mepJSBbN3RlbAfQv3Pomhwjmpiw8m8PmE60m2/rElA3Q2tE990wr1hQsJ/+kJYgg5cd+6f1FyGHH0vslTxXu3hzHkykNPUpmhVnxhQxJtbnJ0Oe8TNiTkoae6L3RIovUmuXsRBdyGkBP33l0NY42LHT0IH5KaV7pK7Leks081c0zo4dabedSlHU2EpNbc5E38na5rIiRvU/MSNuc1E5IeehMFHlMzIeG+t5xMKESBAAAAQCHzSfeRCfiVSbqJPSnFr8unnq+aPp8X53K95bKjj3JsrTctu/IW4nzbve14jyr3SZbFuVV0y2XjwnJ/y2AdKei1fabaSn+KhyR1xt4r3qvF6SxPbqEelV8OzVLDtOVnd7/Da2945n2Mvj023Jp/G+JawV0twtzFuza8GwbDrp490pOcfRloa921iXRq2+W63uHgikeHW3tBWV592tvftP7R4VYqrGfaNV9fuPrw2HBrKqgShZV7KKT4AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIC8fgGxgiwdjur6NQAAAABJRU5ErkJggg==" alt="RMA Arquitectura">
+    <div class="hdr-div"></div>
+    <div class="hdr-info">
+      <strong>Dashboard PMO</strong>
+      <span>Monitoreo del Portafolio de Proyectos</span>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="informe-badge" id="informe-badge">Informe Nº 4 — Mayo 2026</div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab(0,this)">Resumen</button>
+  <button onclick="switchTab(1,this)">Proyectos</button>
+  <button onclick="switchTab(2,this)">Alertas & Riesgos</button>
+  <button onclick="switchTab(3,this)">Costos</button>
+</nav>
+
+<main>
+
+<!-- ═══ PAGE 0: RESUMEN ═══ -->
+<div class="page active" id="page-0">
+
+  <!-- KPIs fila 1 -->
+  <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px" id="kpi-top"></div>
+
+  <!-- Distribución programa + ubicación -->
+  <div class="g2" style="margin-bottom:14px">
+    <div class="card accent-royal">
+      <div class="card-title">Distribución por Programa</div>
+      <table class="dist-table" id="tbl-programa">
+        <thead><tr><th>Programa</th><th>Proyectos</th><th>m²</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card accent-teal">
+      <div class="card-title">Distribución por Ubicación</div>
+      <table class="dist-table" id="tbl-ubicacion">
+        <thead><tr><th>Ubicación</th><th>Proyectos</th><th>m²</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Indicadores de gestión + proyectos 2026 + variación costo -->
+  <div class="g3" style="margin-bottom:14px">
+    <div class="card accent-orange">
+      <div class="card-title">Indicadores de Gestión</div>
+      <div id="indicadores-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Proyectos Iniciados 2026</div>
+      <div id="kpi-2026" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Variación de Costo — Portafolio</div>
+      <div id="var-costo-block"></div>
+    </div>
+  </div>
+
+  <!-- Selector de proyecto -->
+  <div class="card" style="margin-bottom:0">
+    <div class="card-title">Detalle de Proyecto Activo</div>
+    <div class="selector-wrap">
+      <select id="proj-selector" onchange="renderProjDetail()">
+        <option value="">— Seleccioná un proyecto activo —</option>
+      </select>
+    </div>
+    <div class="proj-detail" id="proj-detail"></div>
+  </div>
+
+</div>
+
+<!-- ═══ PAGE 1: PROYECTOS ═══ -->
+<div class="page" id="page-1">
+  <div class="filter-bar">
+    <label>Estatus</label>
+    <select id="f-estatus" onchange="renderTable()">
+      <option value="">Todos</option>
+      <option value="Activo" selected>Activo</option>
+      <option value="Stand-by">Stand-by</option>
+      <option value="Cerrado">Cerrado</option>
+    </select>
+    <label>Programa</label>
+    <select id="f-programa" onchange="renderTable()">
+      <option value="">Todos</option>
+    </select>
+    <label>Riesgo</label>
+    <select id="f-riesgo" onchange="renderTable()">
+      <option value="">Todos</option>
+      <option value="3 Alto">Alto</option>
+      <option value="2 Medio">Medio</option>
+      <option value="1 Bajo">Bajo</option>
+    </select>
+    <div class="search-w">
+      <input type="text" id="f-search" placeholder="Buscar proyecto..." oninput="renderTable()">
+    </div>
+    <div class="filter-count" id="filter-count"></div>
+  </div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="proj-table">
+      <thead><tr>
+        <th>Proyecto</th><th>Programa</th><th>Estatus</th><th>m²</th>
+        <th>Modalidad</th><th>Avance</th><th>Riesgo</th><th>Alerta</th><th>Acción</th>
+      </tr></thead>
+      <tbody id="proj-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ PAGE 2: ALERTAS ═══ -->
+<div class="page" id="page-2">
+  <div class="g3" style="margin-bottom:14px" id="risk-cards"></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="proj-table">
+      <thead><tr>
+        <th>Riesgo</th><th>Proyecto</th><th>Programa</th><th>Avance</th>
+        <th>Alerta</th><th>Acción Requerida</th>
+      </tr></thead>
+      <tbody id="alert-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ PAGE 3: COSTOS ═══ -->
+<div class="page" id="page-3">
+  <div class="kpi-row" id="cost-kpis" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px"></div>
+  <div class="card" style="padding:0;overflow:auto">
+    <table class="proj-table">
+      <thead><tr>
+        <th>Proyecto</th><th>Programa</th><th>Costo Estimado</th><th>Costo Consumido</th>
+        <th>Var. Costo</th><th>Honorarios</th><th>Cobrado</th><th>Caja</th>
+      </tr></thead>
+      <tbody id="cost-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="bpm-logo">
+    <div class="bpm-d">
+      <div class="bd s"></div><div class="bd s"></div><div class="bd"></div>
+      <div class="bpm-t">12</div>
+      <div class="bd" style="margin:0 1px"></div>
+      <div class="bpm-t">BPM</div>
+    </div>
+    <div class="bpm-s">Project Management</div>
+  </div>
+  <div class="ftr-r">RMA Arquitectura © 2026</div>
+</footer>
+
+<script>
+const DATA = [{"id": "0045 - RO", "nombre": "RO", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Punta Carretas", "m2": 2041.0, "fecha_inicio": "2025-01-22", "modalidad": "D (D&C)", "avance": 0.8400000000000001, "semanas": 70.0, "alerta": "Cambios (post cierre de etapa)", "riesgo": "2 Medio", "accion": "Sobre dedicación de recursos / Cambios posteriores a la aprobación del hito", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 36627.1091466666, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -70.0, "var_costo": -36627.1091466666, "cronograma": "", "costeo": ""}, {"id": "0045 - RO Interiorismo Ale", "nombre": "RO Ale*", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Interiorismo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Punta Carretas", "m2": 143.0, "fecha_inicio": "2025-06-10", "modalidad": "G (DI&D)", "avance": 0.5, "semanas": 50.0, "alerta": "Expectativas cliente (costo)", "riesgo": "2 Medio", "accion": "Adecuación de diseño por razones económicas", "tiempo_estimado": null, "costo_estimado": 27266.800000000003, "costo_consumido": 7000.661720000001, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -50.0, "var_costo": 6632.7382800000005, "cronograma": "", "costeo": "27266.800000000003"}, {"id": "0045 - RO Interiorismo Norte", "nombre": "RO Norte*", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Interiorismo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Punta Carretas", "m2": 152.0, "fecha_inicio": "2026-01-20", "modalidad": "G (DI&D)", "avance": 0.5, "semanas": 18.0, "alerta": "Aprobaciones cliente", "riesgo": "1 Bajo", "accion": "Falta de acuerdo cronograma o fechas clave / Demora en aprobación etapa por parte del cliente", "tiempo_estimado": null, "costo_estimado": 27266.800000000003, "costo_consumido": 2787.4747999999995, "honorarios": 11198.0, "cobrado": null, "caja": null, "var_tiempo": -18.0, "var_costo": 10845.925200000001, "cronograma": "", "costeo": "27266.800000000003"}, {"id": "0045 - RO Interiorismo Nopitsch", "nombre": "RO Nopitsch*", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Interiorismo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Punta Carretas", "m2": 593.0, "fecha_inicio": "2025-05-06", "modalidad": "G (DI&D)", "avance": 0.5, "semanas": 55.0, "alerta": "Expectativas cliente (costo)", "riesgo": "2 Medio", "accion": "Adecuación de diseño por razones económicas", "tiempo_estimado": null, "costo_estimado": 43376.3, "costo_consumido": 9507.549586666664, "honorarios": 15090.0, "cobrado": 6036.0, "caja": -3471.5495866666643, "var_tiempo": -55.0, "var_costo": 12180.600413333337, "cronograma": "", "costeo": "43376.3"}, {"id": "0051 - PLB", "nombre": "PLB", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Urbanización", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Manantiales", "m2": null, "fecha_inicio": "2026-01-21", "modalidad": "D (D&C)", "avance": 0.5700000000000001, "semanas": 18.0, "alerta": "Alcance", "riesgo": "3 Alto", "accion": "Discrepancia expectativas cliente con realidad / Sobre dedicación de recursos / Claridad sobre el alcance de las areas ", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 1590.03856, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -18.0, "var_costo": -1590.03856, "cronograma": "", "costeo": ""}, {"id": "0052 - INTRUST", "nombre": "INTRUST", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 258.0, "fecha_inicio": "2025-05-07", "modalidad": "C (D)*P", "avance": 0.8799999999999999, "semanas": 55.0, "alerta": "Cambios por agentes externos", "riesgo": "2 Medio", "accion": "Permisos trancados/demorados / Cambios posteriores a la aprobación del hito", "tiempo_estimado": 45.0, "costo_estimado": null, "costo_consumido": 2927.0300533333343, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -15.400000000000006, "var_costo": -2927.0300533333343, "cronograma": "", "costeo": ""}, {"id": "0054 - CS", "nombre": "CS", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Corporativo", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 475.0, "fecha_inicio": "2026-06-01", "modalidad": "C (D)*P", "avance": 0.0, "semanas": -1.0, "alerta": "Permisos", "riesgo": "1 Bajo", "accion": "Permisos trancados/demorados", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": 1.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0055 - OFCH", "nombre": "OFCH", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 823.0, "fecha_inicio": "2025-01-28", "modalidad": "D (D&C)*P", "avance": 0.55, "semanas": 69.0, "alerta": "Permisos", "riesgo": "3 Alto", "accion": "Permisos trancados/demorados", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 11285.799613333338, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -69.0, "var_costo": -11285.799613333338, "cronograma": "", "costeo": ""}, {"id": "0057 - ARBOR", "nombre": "ARBOR*", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco Norte", "m2": 5497.0, "fecha_inicio": "2025-02-06", "modalidad": "D (D&C)", "avance": 0.55, "semanas": 68.0, "alerta": "Cambios (post cierre de etapa)", "riesgo": "3 Alto", "accion": "Sobre dedicación de recursos / Cambios posteriores a la aprobación del hito", "tiempo_estimado": 58.0, "costo_estimado": 27500.000000000004, "costo_consumido": 48824.599439999976, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -36.099999999999994, "var_costo": -33699.599439999976, "cronograma": "SI", "costeo": "27500.000000000004"}, {"id": "0057 - ARBOR II", "nombre": "ARBOR II", "estatus": "Stand-by", "responsable": "Alvaro Varela", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco Norte", "m2": 5500.0, "fecha_inicio": "2026-01-19", "modalidad": "D (D&C)", "avance": 0.05, "semanas": 18.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 45.0, "costo_estimado": null, "costo_consumido": 34.6256, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -15.75, "var_costo": -34.6256, "cronograma": "SI", "costeo": ""}, {"id": "0059 - AVOLTA CARRASCO", "nombre": "AVOLTA CARRASCO", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Aeropuerto", "m2": 1100.0, "fecha_inicio": "2025-04-07", "modalidad": "D (D&C)", "avance": 0.92, "semanas": 59.0, "alerta": "Recursos excesivos", "riesgo": "2 Medio", "accion": "Pobre desempeño constructora / Falta de acuerdo cronograma o fechas clave / Retraso de cobro por cuestiones ajenas", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 32725.484986666677, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -59.0, "var_costo": -32725.484986666677, "cronograma": "", "costeo": ""}, {"id": "0059 - AVOLTA CARRASCO Amp", "nombre": "AVOLTA CARRASCO AMPL", "estatus": "Cerrado", "responsable": "Luciana Fernandez", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Aeropuerto", "m2": null, "fecha_inicio": "2025-08-05", "modalidad": "C (D)", "avance": 1.0, "semanas": 42.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -42.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0062 - PRAT", "nombre": "PRAT", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Shangrila", "m2": 116.0, "fecha_inicio": "2025-01-29", "modalidad": "D (D&C)", "avance": 0.92, "semanas": 69.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Agentes externos demoran el proceso de trabajo", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 10210.446986666668, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -69.0, "var_costo": -10210.446986666668, "cronograma": "", "costeo": ""}, {"id": "0063 - Reforma Oficina MAPFRE", "nombre": "ROF MAPFRE", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Interiorismo", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Ciudad Vieja", "m2": 410.0, "fecha_inicio": "2025-11-25", "modalidad": "D (D&C)", "avance": 0.5800000000000001, "semanas": 26.0, "alerta": "Cambios (post cierre de etapa)", "riesgo": "3 Alto", "accion": "Discrepancia expectativas cliente con realidad / Sobre dedicación de recursos / Adecuación de diseño por razones económicas (post PE aprobado)", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 8572.789359999997, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -26.0, "var_costo": -8572.789359999997, "cronograma": "", "costeo": ""}, {"id": "0065 - Oficinas Itau", "nombre": "OF ITAU*", "estatus": "Cerrado", "responsable": "Alvaro Varela", "programa": "Corporativo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Jacinto Vera", "m2": 625.0, "fecha_inicio": "2026-02-16", "modalidad": "A (CD)", "avance": 1.0, "semanas": 14.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": 79776.40000000001, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -14.0, "var_costo": 79776.40000000001, "cronograma": "", "costeo": "79776.40000000001"}, {"id": "0109 - PROA ", "nombre": "PROA", "estatus": "Cerrado", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 1970.0, "fecha_inicio": "2025-06-03", "modalidad": "D (D&C)", "avance": 1.0, "semanas": 51.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 42555.06, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -51.0, "var_costo": -42555.06, "cronograma": "", "costeo": ""}, {"id": "0125 - HA", "nombre": "HA", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 615.9, "fecha_inicio": "2025-02-17", "modalidad": "D (D&C)", "avance": 0.92, "semanas": 66.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 34027.95753333337, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -66.0, "var_costo": -34027.95753333337, "cronograma": "", "costeo": ""}, {"id": "0128 - PR", "nombre": "PR", "estatus": "Cerrado", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 450.0, "fecha_inicio": "2025-02-17", "modalidad": "D (D&C)", "avance": 1.0, "semanas": 66.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 22561.776733333347, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -66.0, "var_costo": -22561.776733333347, "cronograma": "", "costeo": ""}, {"id": "0133 - RTV", "nombre": "RTV", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 477.8, "fecha_inicio": "2025-01-28", "modalidad": "D (D&C)*P", "avance": 0.5900000000000001, "semanas": 69.0, "alerta": "Permisos", "riesgo": "3 Alto", "accion": "Permisos trancados/demorados", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 12001.55849333334, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -69.0, "var_costo": -12001.55849333334, "cronograma": "", "costeo": ""}, {"id": "0134 - CMII", "nombre": "CM II", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 411.0, "fecha_inicio": "2025-02-04", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 68.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 10628.638506666668, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -68.0, "var_costo": -10628.638506666668, "cronograma": "", "costeo": ""}, {"id": "0136 - HB", "nombre": "HB*", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 462.0, "fecha_inicio": "2025-06-20", "modalidad": "D (D&C)", "avance": 0.5900000000000001, "semanas": 49.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 59252.600000000006, "costo_consumido": 32478.465733333327, "honorarios": 101640.0, "cobrado": 30492.0, "caja": -1986.465733333327, "var_tiempo": -25.4, "var_costo": 2480.56826666668, "cronograma": "", "costeo": "59252.600000000006"}, {"id": "0137 - LB", "nombre": "LB", "estatus": "Activo", "responsable": "Luciana Fernandez / Camila Yannuzzi", "programa": "Interiorismo", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "San Nicolás", "m2": 550.0, "fecha_inicio": "2025-10-27", "modalidad": "G (DI&D)", "avance": 0.5900000000000001, "semanas": 30.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Falta de acuerdo cronograma o fechas clave / Claridad sobre el alcance de las areas ", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 21491.031479999987, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -30.0, "var_costo": -21491.031479999987, "cronograma": "", "costeo": ""}, {"id": "0211 - WP", "nombre": "WP", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Olivos", "m2": 310.0, "fecha_inicio": "2025-02-13", "modalidad": "F (SA)", "avance": 0.7000000000000001, "semanas": 67.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 2784.4304933333337, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -67.0, "var_costo": -2784.4304933333337, "cronograma": "", "costeo": ""}, {"id": "0212 PS", "nombre": "PS", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Olivos", "m2": 841.8, "fecha_inicio": "2025-02-12", "modalidad": "D (D&C)*P", "avance": 0.55, "semanas": 67.0, "alerta": "Permisos", "riesgo": "3 Alto", "accion": "Permisos trancados/demorados", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -67.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0213 - SC", "nombre": "SC", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Olivos", "m2": 377.0, "fecha_inicio": "2025-12-09", "modalidad": "D (D&C)", "avance": 0.28, "semanas": 24.0, "alerta": "Aprobaciones cliente", "riesgo": "2 Medio", "accion": "Demora en aprobación etapa por parte del cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 4169.267786666666, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -24.0, "var_costo": -4169.267786666666, "cronograma": "", "costeo": ""}, {"id": "0613 - BA", "nombre": "BA", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Reserva Montoya", "m2": 338.6, "fecha_inicio": "2025-03-20", "modalidad": "F (SA)", "avance": 0.9000000000000001, "semanas": 62.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 14794.894159999993, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -62.0, "var_costo": -14794.894159999993, "cronograma": "", "costeo": ""}, {"id": "0616 - MOOD 32", "nombre": "MOOD 32", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Punta del Este", "m2": 8010.0, "fecha_inicio": "2025-01-28", "modalidad": "C (D)*P", "avance": 0.8799999999999999, "semanas": 69.0, "alerta": "Alcance", "riesgo": "2 Medio", "accion": "Falta claridad sobre Alcance contratado", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 10569.340266666673, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -69.0, "var_costo": -10569.340266666673, "cronograma": "", "costeo": ""}, {"id": "0620- LOS TILOS", "nombre": "LOS TILOS", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Punta del Este", "m2": 6080.0, "fecha_inicio": "2025-01-21", "modalidad": "C (D)*P", "avance": 0.71, "semanas": 70.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -70.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0621 - MOOD 5", "nombre": "MOOD 5", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Punta del Este", "m2": 8700.0, "fecha_inicio": "2025-02-05", "modalidad": "C (D)*P", "avance": 0.8799999999999999, "semanas": 68.0, "alerta": "Alcance", "riesgo": "1 Bajo", "accion": "Falta claridad sobre Alcance contratado", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 29567.936546666708, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -68.0, "var_costo": -29567.936546666708, "cronograma": "", "costeo": ""}, {"id": "0625 - SANTAMAR", "nombre": "SANTAMAR", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "La Barra", "m2": 3720.0, "fecha_inicio": "2025-02-26", "modalidad": "D (D&C)", "avance": 0.5700000000000001, "semanas": 65.0, "alerta": "Expectativas cliente (costo)", "riesgo": "2 Medio", "accion": "Adecuación de diseño por razones económicas", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 46118.24501333326, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -65.0, "var_costo": -46118.24501333326, "cronograma": "", "costeo": ""}, {"id": "0631 - AMANSA", "nombre": "AMANSA", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Punta del Este", "m2": 2647.0, "fecha_inicio": "2025-01-22", "modalidad": "C (D)", "avance": 0.88, "semanas": 70.0, "alerta": "Alcance", "riesgo": "2 Medio", "accion": "Falta claridad sobre Alcance contratado", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 15718.331653333327, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -70.0, "var_costo": -15718.331653333327, "cronograma": "", "costeo": ""}, {"id": "0632 - ALDEANAS", "nombre": "ALDEANAS", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "", "m2": 33815.0, "fecha_inicio": "2025-06-19", "modalidad": "B (AP)", "avance": 0.5449999999999999, "semanas": 49.0, "alerta": "Info/Input cliente", "riesgo": "1 Bajo", "accion": "Falta de info/input escencial por cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 6672.85877333333, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -49.0, "var_costo": -6672.85877333333, "cronograma": "", "costeo": ""}, {"id": "0633 - PAUSA", "nombre": "PAUSA*", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "La Barra", "m2": 5300.0, "fecha_inicio": "2025-01-27", "modalidad": "D (D&C)", "avance": 0.51, "semanas": 69.0, "alerta": "Asesores", "riesgo": "2 Medio", "accion": "Asesores demorados / Dedicacion de recursos plan piloto REVIT", "tiempo_estimado": 95.0, "costo_estimado": 83213.90000000001, "costo_consumido": 44751.92613333332, "honorarios": 400000.0, "cobrado": 85000.0, "caja": 40248.07386666668, "var_tiempo": -20.549999999999997, "var_costo": -2312.8371333333125, "cronograma": "SI", "costeo": "83213.90000000001"}, {"id": "0634 - GT", "nombre": "GT", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Pueblo Mio", "m2": 467.0, "fecha_inicio": "2025-01-27", "modalidad": "D (D&C)", "avance": 0.8400000000000001, "semanas": 69.0, "alerta": "Cronograma/fechas", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 26531.54629333333, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -69.0, "var_costo": -26531.54629333333, "cronograma": "", "costeo": ""}, {"id": "0635 - GARDENIAS", "nombre": "GARDENIAS", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Narbona", "m2": 1452.5, "fecha_inicio": "2025-02-03", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 68.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 62467.01794666676, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -68.0, "var_costo": -62467.01794666676, "cronograma": "", "costeo": ""}, {"id": "0636 - GROVE", "nombre": "GROVE*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Montoya", "m2": 15200.0, "fecha_inicio": "2025-02-21", "modalidad": "B (AP)", "avance": 0.9149999999999999, "semanas": 66.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": 15354.900000000001, "costo_consumido": 13896.498159999994, "honorarios": 185000.0, "cobrado": 46200.0, "caja": 32303.501840000004, "var_tiempo": -66.0, "var_costo": 153.23534000000654, "cronograma": "", "costeo": "15354.900000000001"}, {"id": "0637 - RR", "nombre": "RR", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Laguna Escondida", "m2": 547.3, "fecha_inicio": "2025-05-27", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 52.0, "alerta": "Cambios (post cierre de etapa)", "riesgo": "2 Medio", "accion": "Adecuación de diseño por razones económicas (post PE aprobado)", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 24332.758119999988, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -52.0, "var_costo": -24332.758119999988, "cronograma": "", "costeo": ""}, {"id": "0639- CA", "nombre": "CA", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Jose Ignacio", "m2": 193.0, "fecha_inicio": "2026-01-15", "modalidad": "D (D&C)", "avance": 0.14, "semanas": 19.0, "alerta": "Aprobaciones cliente", "riesgo": "2 Medio", "accion": "Demora en aprobación etapa por parte del cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -19.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0640 - LE", "nombre": "LA ESQUINA", "estatus": "Cerrado", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Manantiales", "m2": 2116.0, "fecha_inicio": "2025-05-17", "modalidad": "B (AP)", "avance": 1.005, "semanas": 54.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 7099.617013333335, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -54.0, "var_costo": -7099.617013333335, "cronograma": "", "costeo": ""}, {"id": "0643 - CCL", "nombre": "CCL", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "La Morenita", "m2": 284.7, "fecha_inicio": "2025-09-11", "modalidad": "D (D&C)", "avance": 0.5900000000000001, "semanas": 37.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Falta de acuerdo cronograma o fechas clave / Claridad sobre el alcance de las areas ", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 15673.314573333335, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -37.0, "var_costo": -15673.314573333335, "cronograma": "", "costeo": ""}, {"id": "0644 - BC", "nombre": "BC", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "La Chacra", "m2": 458.0, "fecha_inicio": "2025-10-15", "modalidad": "C (D)", "avance": 0.49, "semanas": 32.0, "alerta": "Aprobaciones cliente", "riesgo": "1 Bajo", "accion": "Falta de info/input escencial por cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 8116.787333333332, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -32.0, "var_costo": -8116.787333333332, "cronograma": "", "costeo": ""}, {"id": "0645 - VS", "nombre": "VS*", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Carolina del Mar", "m2": 355.3, "fecha_inicio": "2025-11-26", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 26.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 30289.600000000002, "costo_consumido": 14409.871066666672, "honorarios": 78036.0, "cobrado": 44507.0, "caja": 30097.128933333326, "var_tiempo": 4.0000000000000036, "var_costo": 8307.328933333332, "cronograma": "SI", "costeo": "30289.600000000002"}, {"id": "0646 - VH", "nombre": "VH*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "Carolina del Mar", "m2": 400.0, "fecha_inicio": "2026-05-11", "modalidad": "D (D&C)", "avance": 0.14, "semanas": 2.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 55262.9, "costo_consumido": 1190.4832533333336, "honorarios": 96000.0, "cobrado": null, "caja": null, "var_tiempo": 3.6000000000000005, "var_costo": 6546.322746666667, "cronograma": "", "costeo": "55262.9"}, {"id": "0647 - GMD", "nombre": "GMD*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Punta del Este", "barrio": "La Carolina", "m2": 320.0, "fecha_inicio": "2026-05-06", "modalidad": "D (D&C)", "avance": 0.14, "semanas": 3.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 47322.00000000001, "costo_consumido": 1086.572, "honorarios": 79200.0, "cobrado": null, "caja": null, "var_tiempo": 2.6000000000000005, "var_costo": 5538.508000000002, "cronograma": "", "costeo": "47322.00000000001"}, {"id": "0648 - LO", "nombre": "LO*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "", "ubicacion": "Punta del Este", "barrio": "La Orientala", "m2": 900.0, "fecha_inicio": "2026-05-25", "modalidad": "D (D&C)", "avance": 0.14, "semanas": 0.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 48745.4, "costo_consumido": 0.0, "honorarios": 135000.0, "cobrado": null, "caja": null, "var_tiempo": 5.6000000000000005, "var_costo": 6824.356000000001, "cronograma": "", "costeo": "48745.4"}, {"id": "0801 - MZ", "nombre": "MZ", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "La Reserva", "m2": 387.0, "fecha_inicio": "2025-02-25", "modalidad": "D (D&C)", "avance": 0.8400000000000001, "semanas": 65.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 40507.45178666671, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -65.0, "var_costo": -40507.45178666671, "cronograma": "", "costeo": ""}, {"id": "0908 - AYRES POLO", "nombre": "AYRES POLO", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 11250.0, "fecha_inicio": "2025-02-10", "modalidad": "C (D)*P", "avance": 0.76, "semanas": 67.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Sobre dedicación de recursos / Retraso de cobro por cuestiones ajenas", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 29854.635906666634, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -67.0, "var_costo": -29854.635906666634, "cronograma": "", "costeo": ""}, {"id": "0909 - GREEN CONCEPT", "nombre": "GC", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Arroyo Carrasco", "m2": 15200.0, "fecha_inicio": "2025-02-03", "modalidad": "C (D)", "avance": 0.88, "semanas": 68.0, "alerta": "Alcance", "riesgo": "2 Medio", "accion": "Falta claridad sobre Alcance contratado", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -68.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "0911 - ZEN", "nombre": "ZEN", "estatus": "Activo", "responsable": "Victoria Dobal", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco Norte", "m2": 8112.0, "fecha_inicio": "2025-02-13", "modalidad": "C (D)", "avance": 0.88, "semanas": 67.0, "alerta": "Cambios (post cierre de etapa)", "riesgo": "2 Medio", "accion": "Cambios posteriores a la aprobación del hito / Adecuación de diseño por razones económicas (post PE aprobado) / ", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 71055.38553333323, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -67.0, "var_costo": -71055.38553333323, "cronograma": "", "costeo": ""}, {"id": "0915 - RPP", "nombre": "RPP*", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 373.3, "fecha_inicio": "2025-07-31", "modalidad": "D (D&C)*P", "avance": 0.47000000000000003, "semanas": 43.0, "alerta": "Permisos", "riesgo": "3 Alto", "accion": "Permisos trancados/demorados", "tiempo_estimado": 40.0, "costo_estimado": 37943.4, "costo_consumido": 0.0, "honorarios": 53639.0, "cobrado": 27630.0, "caja": 27630.0, "var_tiempo": -24.2, "var_costo": 17833.398, "cronograma": "", "costeo": "37943.4"}, {"id": "0919 - RGB", "nombre": "RGB", "estatus": "Cerrado", "responsable": "Magdalena Pommerenck", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": null, "fecha_inicio": "2025-09-05", "modalidad": "C (D)", "avance": 0.69, "semanas": 38.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 10894.63369333333, "honorarios": 21300.0, "cobrado": 19098.0, "caja": 8203.36630666667, "var_tiempo": -38.0, "var_costo": -10894.63369333333, "cronograma": "", "costeo": ""}, {"id": "0920 - OH", "nombre": "OH", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 290.0, "fecha_inicio": "2025-12-09", "modalidad": "D (D&C)", "avance": 0.55, "semanas": 24.0, "alerta": "Asesores", "riesgo": "3 Alto", "accion": "Asesores demorados", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 6948.046666666671, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -24.0, "var_costo": -6948.046666666671, "cronograma": "", "costeo": ""}, {"id": "0921 - RJL", "nombre": "RJL", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": null, "fecha_inicio": "2026-05-31", "modalidad": "D (D&C)", "avance": 0.05, "semanas": 0.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 46.6944, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": 0.0, "var_costo": -46.6944, "cronograma": "", "costeo": ""}, {"id": "0922 - RRM", "nombre": "RRM*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 400.0, "fecha_inicio": "2026-05-07", "modalidad": "D (D&C)", "avance": 0.05, "semanas": 3.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 33482.9, "costo_consumido": 1091.0853866666669, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -1.0, "var_costo": 583.0596133333333, "cronograma": "", "costeo": "33482.9"}, {"id": "1007 - PH GC", "nombre": "PH GC", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Parques II", "m2": 218.0, "fecha_inicio": "2025-05-29", "modalidad": "D (D&C)", "avance": 0.9500000000000001, "semanas": 52.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 25742.31719999998, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -52.0, "var_costo": -25742.31719999998, "cronograma": "", "costeo": ""}, {"id": "1008 - TRENTO", "nombre": "TRENTO", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Multifamiliar", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Parques II", "m2": 8700.0, "fecha_inicio": "2025-06-03", "modalidad": "D (D&C)", "avance": 0.9500000000000001, "semanas": 51.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 11617.138333333334, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -51.0, "var_costo": -11617.138333333334, "cronograma": "", "costeo": ""}, {"id": "1101- WPO", "nombre": "WPO", "estatus": "Stand-by", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Cavas de la Tahona", "m2": 419.0, "fecha_inicio": "2025-08-21", "modalidad": "D (D&C)", "avance": 0.5700000000000001, "semanas": 40.0, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 220.42280000000002, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -40.0, "var_costo": -220.42280000000002, "cronograma": "", "costeo": ""}, {"id": "1102 - AA", "nombre": "AA", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Cavas de la Tahona", "m2": 228.3, "fecha_inicio": "2025-05-12", "modalidad": "D (D&C)", "avance": 0.5900000000000001, "semanas": 54.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 13944.834159999986, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -54.0, "var_costo": -13944.834159999986, "cronograma": "", "costeo": ""}, {"id": "1103 - GH", "nombre": "GH*", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Cavas de la Tahona", "m2": 412.7, "fecha_inicio": "2025-07-01", "modalidad": "D (D&C)", "avance": 0.55, "semanas": 47.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 45434.4, "costo_consumido": 22810.667866666696, "honorarios": 90794.0, "cobrado": 45397.0, "caja": 22586.332133333304, "var_tiempo": -25.0, "var_costo": 2178.252133333306, "cronograma": "", "costeo": "45434.4"}, {"id": "1104 - IM", "nombre": "IM*", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Cavas de la Tahona", "m2": 232.0, "fecha_inicio": "2025-11-01", "modalidad": "D (D&C)", "avance": 0.5900000000000001, "semanas": 30.0, "alerta": "Expectativas cliente (costo)", "riesgo": "3 Alto", "accion": "Discrepancia expectativas cliente con realidad", "tiempo_estimado": 40.0, "costo_estimado": 27809.100000000002, "costo_consumido": 20070.91296000002, "honorarios": 50072.0, "cobrado": 23320.0, "caja": 3249.0870399999803, "var_tiempo": -6.399999999999999, "var_costo": -3663.5439600000173, "cronograma": "SI", "costeo": "27809.100000000002"}, {"id": "1200 - PH RM", "nombre": "PH RM", "estatus": "Activo", "responsable": "Camila Yannuzzi", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Ombues", "m2": 242.3, "fecha_inicio": "2025-01-22", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 70.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 14484.085066666668, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -70.0, "var_costo": -14484.085066666668, "cronograma": "", "costeo": ""}, {"id": "1201 - PH RR", "nombre": "PH RR", "estatus": "Activo", "responsable": "Francisco Marquez", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Ombues", "m2": 249.9, "fecha_inicio": "2025-01-22", "modalidad": "D (D&C)", "avance": 0.7500000000000001, "semanas": 70.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 13244.51392, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -70.0, "var_costo": -13244.51392, "cronograma": "", "costeo": ""}, {"id": "1300 - La Gocharda", "nombre": "LA GOCHARDA*", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Canelones", "m2": 498.5, "fecha_inicio": "2025-06-23", "modalidad": "D (D&C)", "avance": 0.6000000000000001, "semanas": 48.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": 68610.3, "costo_consumido": 25400.732666666652, "honorarios": 87736.0, "cobrado": 48255.0, "caja": 22854.267333333348, "var_tiempo": -23.999999999999996, "var_costo": 15765.447333333355, "cronograma": "", "costeo": "68610.3"}, {"id": "1301 - SV", "nombre": "SV*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Quinta de los Horneros", "m2": 250.0, "fecha_inicio": "2026-03-05", "modalidad": "C (D)", "avance": 0.46, "semanas": 12.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 22.0, "costo_estimado": 52861.600000000006, "costo_consumido": 5035.179359999999, "honorarios": 33000.0, "cobrado": 3300.0, "caja": -1735.1793599999992, "var_tiempo": -1.879999999999999, "var_costo": 19281.156640000005, "cronograma": "", "costeo": "52861.600000000006"}, {"id": "1302 - RP", "nombre": "RP", "estatus": "Stand-by", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Quinta de los Horneros", "m2": 230.0, "fecha_inicio": "2026-04-21", "modalidad": "C (D)", "avance": 0.0, "semanas": 5.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 8.0, "costo_estimado": null, "costo_consumido": 680.7375733333333, "honorarios": 13200.0, "cobrado": 2640.0, "caja": 1959.2624266666667, "var_tiempo": null, "var_costo": null, "cronograma": "", "costeo": ""}, {"id": "1400 - PCM", "nombre": "PCM*", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Maldonado", "barrio": "Maldonado", "m2": 375.0, "fecha_inicio": "2026-05-31", "modalidad": "D (D&C)", "avance": 0.0, "semanas": 0.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": 40.0, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": 77000.0, "cobrado": null, "caja": null, "var_tiempo": 0.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "E001 - KZ ", "nombre": "KZ", "estatus": "Cerrado", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Exterior", "barrio": "Francia", "m2": 530.8, "fecha_inicio": "2025-09-10", "modalidad": "C (D)", "avance": 1.0, "semanas": 37.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 11538.096053333318, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -37.0, "var_costo": -11538.096053333318, "cronograma": "", "costeo": ""}, {"id": "E002 - LP109", "nombre": "LP109", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Exterior", "barrio": "Paraguay", "m2": null, "fecha_inicio": "2026-05-19", "modalidad": "B (AP)", "avance": 0.365, "semanas": 1.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -1.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "E003 - LP138", "nombre": "LP138", "estatus": "Activo", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Exterior", "barrio": "Paraguay", "m2": null, "fecha_inicio": "2026-05-19", "modalidad": "B (AP)", "avance": 0.365, "semanas": 1.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -1.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 43 / Liber Seregni - Nuevo", "nombre": "K43", "estatus": "Cerrado", "responsable": "Camila Yannuzzi", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Tres Cruces", "m2": null, "fecha_inicio": "2025-04-02", "modalidad": "D (D&C)", "avance": 1.0, "semanas": 60.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -60.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 44 / Araucho - Nuevo", "nombre": "K44", "estatus": "Cerrado", "responsable": "Camila Yannuzzi", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Pocitos", "m2": 83.0, "fecha_inicio": "2026-01-26", "modalidad": "D (D&C)", "avance": 0.9800000000000001, "semanas": 17.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -17.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 46 / Acevedo Diaz", "nombre": "K45", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Cordon", "m2": 80.0, "fecha_inicio": "2026-02-10", "modalidad": "D (D&C)", "avance": 0.5900000000000001, "semanas": 15.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Demora en aprobación etapa por parte del cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -15.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 17 / El Pinar ", "nombre": "K17", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Comercial", "tipo": "Reforma", "ubicacion": "Canelones", "barrio": "El Pinar", "m2": null, "fecha_inicio": "2026-04-10", "modalidad": "D (D&C)", "avance": 0.5800000000000001, "semanas": 7.0, "alerta": "Cronograma/fechas", "riesgo": "2 Medio", "accion": "Demora en aprobación etapa por parte del cliente", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -7.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 14 / Rivera - Fachada", "nombre": "K14 ", "estatus": "Activo", "responsable": "Magdalena Pommerenck", "programa": "Comercial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Malvin", "m2": null, "fecha_inicio": "2026-04-11", "modalidad": "D (D&C)", "avance": 0.6000000000000001, "semanas": 7.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -7.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 14 / Rivera - Interior", "nombre": "K14 ", "estatus": "Activo", "responsable": "Luciana Fernandez", "programa": "Comercial", "tipo": "Reforma", "ubicacion": "Montevideo", "barrio": "Malvin", "m2": null, "fecha_inicio": "2026-04-12", "modalidad": "D (D&C)", "avance": 0.51, "semanas": 7.0, "alerta": "", "riesgo": "1 Bajo", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -7.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "KINKO 47 / Av de las Américas", "nombre": "K47", "estatus": "Stand-by", "responsable": "Magdalena Pommerenck", "programa": "Comercial", "tipo": "Obra Nueva", "ubicacion": "Montevideo", "barrio": "Carrasco", "m2": 95.0, "fecha_inicio": "2025-11-03", "modalidad": "D (D&C)", "avance": 0.6000000000000001, "semanas": 29.0, "alerta": "Cambios por agentes externos", "riesgo": "1 Bajo", "accion": "Cliente aun no tiene el local", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": -29.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "1302 - RP (Roberto Peirano)", "nombre": "RP", "estatus": "Stand-by", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Canelones", "barrio": "Olivo de los Horneros", "m2": null, "fecha_inicio": "2026-05-31", "modalidad": "B (AP)", "avance": 0.0, "semanas": null, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": 0.0, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": 0.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}, {"id": "El Nido - Juan Carlos", "nombre": "", "estatus": "Stand-by", "responsable": "Alvaro Varela", "programa": "Residencial", "tipo": "Obra Nueva", "ubicacion": "Maldonado", "barrio": "Maldonado", "m2": null, "fecha_inicio": "2026-05-31", "modalidad": "D (D&C)", "avance": 0.0, "semanas": null, "alerta": "", "riesgo": "", "accion": "", "tiempo_estimado": null, "costo_estimado": null, "costo_consumido": null, "honorarios": null, "cobrado": null, "caja": null, "var_tiempo": 0.0, "var_costo": 0.0, "cronograma": "", "costeo": ""}];
+
+const PROG_COLORS = {
+  'Residencial':'#3B5FBB','Multifamiliar':'#2E9299','Corporativo':'#F26522',
+  'Interiorismo':'#E879A0','Comercial':'#ECC94B','Urbanización':'#48BB78'
+};
+
+function fmt(n){ if(n==null||isNaN(n)) return '—'; return 'US$ '+Math.round(n).toLocaleString('es-UY'); }
+function fmtM2(n){ if(!n) return '—'; return Math.round(n).toLocaleString('es-UY')+' m²'; }
+function fmtPct(n){ if(n==null||isNaN(n)) return '—'; return Math.round(n*100)+'%'; }
+function fmtSem(n){ if(n==null||isNaN(n)) return '—'; return (n>0?'+':'')+n.toFixed(1)+' sem'; }
+
+function riskBadge(r){
+  if(!r||r==='None') return '<span class="badge na">—</span>';
+  if(r.includes('Alto')) return '<span class="badge alto">Alto</span>';
+  if(r.includes('Medio')) return '<span class="badge medio">Medio</span>';
+  return '<span class="badge bajo">Bajo</span>';
+}
+function statusBadge(s){
+  if(s==='Activo') return '<span class="badge activo">Activo</span>';
+  if(s==='Stand-by') return '<span class="badge standby">Stand-by</span>';
+  return '<span class="badge cerrado">Cerrado</span>';
+}
+function progBar(v){
+  if(v==null||isNaN(v)) return '—';
+  const pct=Math.min(100,Math.round(v*100));
+  const cls=pct>=75?'hi':pct<40?'lo':'';
+  return `<span class="prog-bar"><span class="prog-fill ${cls}" style="width:${pct}%"></span></span>${pct}%`;
+}
+
+// ══ RESUMEN ══
+function renderResumen(){
+  const activos=DATA.filter(p=>p.estatus==='Activo');
+  const standby=DATA.filter(p=>p.estatus==='Stand-by');
+  const total2026=DATA.filter(p=>p.fecha_inicio&&p.fecha_inicio.startsWith('2026')).length;
+  const m2total=activos.reduce((s,p)=>s+(p.m2||0),0);
+  const alto=activos.filter(p=>p.riesgo&&p.riesgo.includes('Alto')).length;
+  const conAlerta=activos.filter(p=>p.alerta).length;
+  const avgAv=activos.filter(p=>typeof p.avance==='number').reduce((s,p,_,a)=>s+p.avance/a.length,0);
+
+  // KPIs
+  document.getElementById('kpi-top').innerHTML=`
+    <div class="kpi k-orange"><div class="kpi-lbl">Proyectos Activos</div><div class="kpi-val">${activos.length}</div><div class="kpi-sub">Stand-by: ${standby.length}</div></div>
+    <div class="kpi k-royal"><div class="kpi-lbl">Total m² Portafolio</div><div class="kpi-val">${Math.round(m2total/1000)}k</div><div class="kpi-sub">m² bajo gestión</div></div>
+    <div class="kpi k-teal"><div class="kpi-lbl">Avance Promedio</div><div class="kpi-val">${Math.round(avgAv*100)}%</div><div class="kpi-sub">Proyectos activos</div></div>
+    <div class="kpi k-red"><div class="kpi-lbl">Riesgo Alto</div><div class="kpi-val">${alto}</div><div class="kpi-sub">${conAlerta} con alertas activas</div></div>
+  `;
+
+  // Programa table
+  const progMap={};
+  activos.forEach(p=>{
+    if(!progMap[p.programa]) progMap[p.programa]={count:0,m2:0};
+    progMap[p.programa].count++; if(p.m2) progMap[p.programa].m2+=p.m2;
+  });
+  const progOrder=['Residencial','Multifamiliar','Corporativo','Comercial','Interiorismo','Urbanización'];
+  const totalCnt=activos.length, totalM2=m2total;
+  let ptbody=progOrder.filter(k=>progMap[k]).map(k=>{
+    const d=progMap[k];
+    return `<tr><td><span class="prog-dot" style="background:${PROG_COLORS[k]||'#888'}"></span>${k}</td><td>${d.count}</td><td>${d.m2?Math.round(d.m2).toLocaleString('es-UY')+' m²':'—'}</td></tr>`;
+  }).join('');
+  ptbody+=`<tr><td>Total</td><td>${totalCnt}</td><td>${Math.round(totalM2).toLocaleString('es-UY')} m²</td></tr>`;
+  document.querySelector('#tbl-programa tbody').innerHTML=ptbody;
+
+  // Ubicación table
+  const ubicMap={};
+  activos.forEach(p=>{
+    const u=p.ubicacion?p.ubicacion.split('/')[0].trim():'Sin datos';
+    if(!ubicMap[u]) ubicMap[u]={count:0,m2:0};
+    ubicMap[u].count++; if(p.m2) ubicMap[u].m2+=p.m2;
+  });
+  const ubicSorted=Object.entries(ubicMap).sort((a,b)=>b[1].count-a[1].count);
+  let utbody=ubicSorted.map(([u,d])=>`<tr><td>${u}</td><td>${d.count}</td><td>${d.m2?Math.round(d.m2).toLocaleString('es-UY')+' m²':'—'}</td></tr>`).join('');
+  utbody+=`<tr><td>Total</td><td>${totalCnt}</td><td>${Math.round(totalM2).toLocaleString('es-UY')} m²</td></tr>`;
+  document.querySelector('#tbl-ubicacion tbody').innerHTML=utbody;
+
+  // Indicadores gestión
+  const conCron=activos.filter(p=>p.cronograma&&p.cronograma!=='None'&&p.cronograma!=='').length;
+  const conCosteo=activos.filter(p=>p.costo_estimado).length;
+  document.getElementById('indicadores-grid').innerHTML=`
+    <div style="text-align:center;padding:10px;background:var(--bg);border-radius:0;border:1px solid var(--line)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Con Cronograma</div>
+      <div style="font-family:Manrope,sans-serif;font-size:28px;font-weight:800;color:var(--royal)">${conCron}</div>
+      <div style="font-size:10px;color:var(--muted)">de ${activos.length} activos</div>
+    </div>
+    <div style="text-align:center;padding:10px;background:var(--bg);border-radius:0;border:1px solid var(--line)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Con Costeo</div>
+      <div style="font-family:Manrope,sans-serif;font-size:28px;font-weight:800;color:var(--orange)">${conCosteo}</div>
+      <div style="font-size:10px;color:var(--muted)">de ${activos.length} activos</div>
+    </div>
+  `;
+
+  // Proyectos 2026
+  const p2026=DATA.filter(p=>p.fecha_inicio&&p.fecha_inicio.startsWith('2026'));
+  document.getElementById('kpi-2026').innerHTML=`
+    <div style="font-family:Manrope,sans-serif;font-size:32px;font-weight:800;color:var(--teal)">${p2026.length}</div>
+    <div style="font-size:11px;color:var(--muted)">proyectos iniciados en 2026</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--slate)">${p2026.slice(0,6).map(p=>p.nombre).join(', ')}${p2026.length>6?' y más...':''}</div>
+  `;
+
+  // Variación costo
+  const varGlobal=activos.reduce((s,p)=>s+(p.var_costo||0),0);
+  const varColor=varGlobal>=0?'var(--green)':'var(--red)';
+  const varSign=varGlobal>=0?'+':'';
+  const muestra=activos.filter(p=>p.costo_estimado);
+  const varMuestra=muestra.reduce((s,p)=>s+(p.var_costo||0),0);
+  const mColor=varMuestra>=0?'var(--green)':'var(--red)';
+  document.getElementById('var-costo-block').innerHTML=`
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Variación Global (todos los activos)</div>
+      <div style="font-family:Manrope,sans-serif;font-size:22px;font-weight:800;color:${varColor}">${varSign}US$ ${Math.round(Math.abs(varGlobal)).toLocaleString('es-UY')}</div>
+    </div>
+    <div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Variación Muestra (${muestra.length} proy. c/costeo)</div>
+      <div style="font-family:Manrope,sans-serif;font-size:22px;font-weight:800;color:${mColor}">${varMuestra>=0?'+':''}US$ ${Math.round(Math.abs(varMuestra)).toLocaleString('es-UY')}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">% Muestra sobre total activos: ${(muestra.length/activos.length*100).toFixed(1)}%</div>
+    </div>
+  `;
+
+  // Populate project selector
+  const sel=document.getElementById('proj-selector');
+  activos.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.nombre; o.textContent=`${p.nombre} — ${p.programa}`;
+    sel.appendChild(o);
+  });
+}
+
+function renderProjDetail(){
+  const nombre=document.getElementById('proj-selector').value;
+  const el=document.getElementById('proj-detail');
+  if(!nombre){ el.className='proj-detail'; return; }
+  const p=DATA.find(x=>x.nombre===nombre);
+  if(!p){ el.className='proj-detail'; return; }
+
+  const vtColor=p.var_tiempo!=null?(p.var_tiempo>=0?'pos':'neg'):'';
+  const vcColor=p.var_costo!=null?(p.var_costo>=0?'pos':'neg'):'';
+
+  el.className='proj-detail visible';
+  el.innerHTML=`
+    <div class="detail-metric">
+      <div class="dm-lbl">Programa</div>
+      <div class="dm-val" style="font-size:16px;color:var(--royal)">${p.programa}</div>
+      <div class="dm-sub">${p.tipo||'—'}</div>
+    </div>
+    <div class="detail-metric">
+      <div class="dm-lbl">Metraje</div>
+      <div class="dm-val">${p.m2?Math.round(p.m2).toLocaleString('es-UY'):'—'}</div>
+      <div class="dm-sub">m²</div>
+    </div>
+    <div class="detail-metric">
+      <div class="dm-lbl">Avance Real</div>
+      <div class="dm-val">${fmtPct(p.avance)}</div>
+      <div class="dm-sub"><span class="prog-bar" style="width:60px"><span class="prog-fill ${Math.round(p.avance*100)>=75?'hi':Math.round(p.avance*100)<40?'lo':''}" style="width:${Math.min(100,Math.round(p.avance*100))}%"></span></span></div>
+    </div>
+    <div class="detail-metric">
+      <div class="dm-lbl">Variación Tiempo</div>
+      <div class="dm-val ${vtColor}">${p.var_tiempo!=null?(p.var_tiempo>0?'+':'')+p.var_tiempo.toFixed(1)+' sem':'—'}</div>
+      <div class="dm-sub">real vs. estimado</div>
+    </div>
+    <div class="detail-metric">
+      <div class="dm-lbl">Variación Costo</div>
+      <div class="dm-val ${vcColor}">${p.var_costo!=null?(p.var_costo>0?'+':'')+fmt(p.var_costo):'—'}</div>
+      <div class="dm-sub">real vs. estimado</div>
+    </div>
+  `;
+}
+
+// ══ PROJECTS TABLE ══
+function populateProgramFilter(){
+  const progs=[...new Set(DATA.map(p=>p.programa))].sort();
+  const sel=document.getElementById('f-programa');
+  progs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+}
+
+function renderTable(){
+  const est=document.getElementById('f-estatus').value;
+  const prog=document.getElementById('f-programa').value;
+  const risk=document.getElementById('f-riesgo').value;
+  const q=document.getElementById('f-search').value.toLowerCase();
+  const rows=DATA.filter(p=>(!est||p.estatus===est)&&(!prog||p.programa===prog)&&(!risk||p.riesgo===risk)&&(!q||p.nombre.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)));
+  document.getElementById('filter-count').textContent=`${rows.length} proyectos`;
+  document.getElementById('proj-tbody').innerHTML=rows.map(p=>`
+    <tr>
+      <td><strong>${p.nombre}</strong><br><span style="color:var(--muted);font-size:10px">${p.id}</span></td>
+      <td>${p.programa}</td><td>${statusBadge(p.estatus)}</td><td>${fmtM2(p.m2)}</td>
+      <td style="font-size:11px">${p.modalidad||'—'}</td><td>${progBar(p.avance)}</td>
+      <td>${riskBadge(p.riesgo)}</td>
+      <td>${p.alerta?`<span class="alert-chip">${p.alerta}</span>`:'—'}</td>
+      <td style="font-size:11px;max-width:200px;color:var(--muted)">${p.accion||'—'}</td>
+    </tr>`).join('');
+}
+
+// ══ ALERTS ══
+function renderAlerts(){
+  const activos=DATA.filter(p=>p.estatus==='Activo');
+  const alto=activos.filter(p=>p.riesgo&&p.riesgo.includes('Alto'));
+  const medio=activos.filter(p=>p.riesgo&&p.riesgo.includes('Medio'));
+  const bajo=activos.filter(p=>p.riesgo&&p.riesgo.includes('Bajo'));
+  document.getElementById('risk-cards').innerHTML=`
+    <div class="card" style="border-top:3px solid var(--red)">
+      <div class="kpi-lbl">🔴 Riesgo Alto</div>
+      <div style="font-family:Manrope,sans-serif;font-size:32px;font-weight:800;color:var(--red)">${alto.length}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">${alto.map(p=>p.nombre).join(' · ')}</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <div class="kpi-lbl">🟡 Riesgo Medio</div>
+      <div style="font-family:Manrope,sans-serif;font-size:32px;font-weight:800;color:var(--amber)">${medio.length}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">${medio.slice(0,6).map(p=>p.nombre).join(' · ')}${medio.length>6?' +más':''}</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green)">
+      <div class="kpi-lbl">🟢 Riesgo Bajo</div>
+      <div style="font-family:Manrope,sans-serif;font-size:32px;font-weight:800;color:var(--green)">${bajo.length}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">En seguimiento normal</div>
+    </div>
+  `;
+  const withAlert=activos.filter(p=>p.alerta).sort((a,b)=>{
+    const rv={'3 Alto':3,'2 Medio':2,'1 Bajo':1};
+    return (rv[b.riesgo]||0)-(rv[a.riesgo]||0)||(a.avance-b.avance);
+  });
+  document.getElementById('alert-tbody').innerHTML=withAlert.map(p=>`
+    <tr>
+      <td>${riskBadge(p.riesgo)}</td>
+      <td><strong>${p.nombre}</strong></td><td>${p.programa}</td><td>${progBar(p.avance)}</td>
+      <td><span class="alert-chip">${p.alerta}</span></td>
+      <td style="font-size:11px;color:var(--muted);max-width:220px">${p.accion||'—'}</td>
+    </tr>`).join('');
+}
+
+// ══ COSTS ══
+function renderCosts(){
+  const activos=DATA.filter(p=>p.estatus==='Activo'&&p.costo_consumido);
+  const tC=activos.reduce((s,p)=>s+(p.costo_consumido||0),0);
+  const tH=activos.reduce((s,p)=>s+(p.honorarios||0),0);
+  const tCob=activos.reduce((s,p)=>s+(p.cobrado||0),0);
+  const tCaja=activos.reduce((s,p)=>s+(p.caja||0),0);
+  document.getElementById('cost-kpis').innerHTML=`
+    <div class="kpi k-royal"><div class="kpi-lbl">Costo Consumido</div><div class="kpi-val" style="font-size:18px">${fmt(tC)}</div></div>
+    <div class="kpi k-orange"><div class="kpi-lbl">Honorarios Acordados</div><div class="kpi-val" style="font-size:18px">${fmt(tH)}</div></div>
+    <div class="kpi k-teal"><div class="kpi-lbl">Honorarios Cobrados</div><div class="kpi-val" style="font-size:18px">${fmt(tCob)}</div></div>
+    <div class="kpi ${tCaja>=0?'k-green':'k-red'}"><div class="kpi-lbl">Caja (cobrado - gastado)</div><div class="kpi-val" style="font-size:18px">${fmt(tCaja)}</div></div>
+  `;
+  document.getElementById('cost-tbody').innerHTML=activos.sort((a,b)=>(b.costo_consumido||0)-(a.costo_consumido||0)).map(p=>{
+    const vcCls=p.var_costo!=null?(p.var_costo>=0?'pos':'neg'):'';
+    return `<tr>
+      <td><strong>${p.nombre}</strong></td><td>${p.programa}</td>
+      <td>${fmt(p.costo_estimado)}</td><td>${fmt(p.costo_consumido)}</td>
+      <td class="${vcCls}">${p.var_costo!=null?(p.var_costo>0?'+':'')+fmt(p.var_costo):'—'}</td>
+      <td>${fmt(p.honorarios)}</td><td>${fmt(p.cobrado)}</td>
+      <td class="${p.caja!=null&&p.caja<0?'neg':''}">${fmt(p.caja)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function switchTab(idx,btn){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+renderResumen();
+populateProgramFilter();
+renderTable();
+renderAlerts();
+renderCosts();
+</script>
+</body>
+</html>
